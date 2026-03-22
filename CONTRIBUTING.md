@@ -1,6 +1,3 @@
----
-type: "note"
----
 # Contributing to Collaborator
 
 Thanks for your interest in contributing to Collaborator. This guide covers
