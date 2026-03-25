@@ -39,14 +39,69 @@ All data is stored locally on disk.
 
 ### Prerequisites
 
-- **Node.js** (v22+)
-- **Bun** — used for package management and running tests
-- **tmux** — required for terminal sessions (`brew install tmux`)
+You'll need three tools installed before you can run Collaborator locally. All of them can be installed from the terminal (open Terminal.app from your Applications/Utilities folder).
+
+#### 1. Homebrew (macOS package manager)
+
+If you don't already have Homebrew, install it first — it's used to install the other tools:
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+After it finishes, follow any instructions it prints about adding Homebrew to your PATH.
+
+#### 2. Node.js (v22+)
+
+```sh
+brew install node
+```
+
+Verify it's installed:
+
+```sh
+node --version
+```
+
+You should see something like `v22.x.x`.
+
+#### 3. Bun
+
+Bun is used instead of npm for installing packages and running tests:
+
+```sh
+brew install oven-sh/bun/bun
+```
+
+Verify:
+
+```sh
+bun --version
+```
+
+#### 4. tmux
+
+tmux is the program that powers Collaborator's terminal sessions. Without it, terminals won't work:
+
+```sh
+brew install tmux
+```
+
+Verify:
+
+```sh
+tmux -V
+```
+
+You should see something like `tmux 3.x`.
 
 ### Setup
 
+Once the prerequisites are installed, clone the repo and install dependencies:
+
 ```sh
-cd collab-electron
+git clone https://github.com/collaborator-ai/collab-public.git
+cd collab-public/collab-electron
 bun install
 ```
 
