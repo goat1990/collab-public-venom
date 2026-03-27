@@ -295,6 +295,7 @@ export async function createSession(
       shell,
       cwd: resolvedCwd,
       createdAt: new Date().toISOString(),
+      backend: "sidecar",
     });
 
     sidecarSessionIds.add(sid);
@@ -326,6 +327,7 @@ export async function createSession(
     shell,
     cwd: resolvedCwd,
     createdAt: new Date().toISOString(),
+    backend: "tmux",
   });
 
   const session = sessions.get(sessionId)!;
@@ -355,41 +357,38 @@ export async function reconnectSession(
   scrollback: string;
   mode: "tmux" | "sidecar";
 }> {
-  // Try sidecar first if it's running — the session may have been
-  // created under sidecar mode even if the current default differs.
-  // Fall through to tmux if the session isn't in the sidecar.
-  if (sidecarClient || terminalMode() === "sidecar") {
-    try {
-      await ensureSidecar();
-      const client = getSidecarClient();
-      const { socketPath } = await client.reconnectSession(
-        sessionId, cols, rows,
-      );
+  // Route based on the backend that originally created this session.
+  // Sessions without a backend field are legacy tmux sessions.
+  const meta = readSessionMeta(sessionId);
+  const backend = meta?.backend ?? "tmux";
 
-      const dataSock = await client.attachDataSocket(
-        socketPath,
-        (data) => {
-          sendToSender(senderWebContentsId, "pty:data", {
-            sessionId,
-            data,
-          });
-          scheduleForegroundCheck(sessionId);
-        },
-      );
+  if (backend === "sidecar") {
+    await ensureSidecar();
+    const client = getSidecarClient();
+    const { socketPath } = await client.reconnectSession(
+      sessionId, cols, rows,
+    );
 
-      dataSockets.get(sessionId)?.destroy();
-      dataSockets.set(sessionId, dataSock);
+    const dataSock = await client.attachDataSocket(
+      socketPath,
+      (data) => {
+        sendToSender(senderWebContentsId, "pty:data", {
+          sessionId,
+          data,
+        });
+        scheduleForegroundCheck(sessionId);
+      },
+    );
 
-      const meta = readSessionMeta(sessionId);
-      const shell = meta?.shell || process.env.SHELL || "/bin/zsh";
-      sidecarSessionIds.add(sessionId);
+    dataSockets.get(sessionId)?.destroy();
+    dataSockets.set(sessionId, dataSock);
 
-      return {
-        sessionId, shell, meta, scrollback: "", mode: "sidecar",
-      };
-    } catch {
-      // Session not in sidecar — fall through to tmux
-    }
+    const shell = meta?.shell || process.env.SHELL || "/bin/zsh";
+    sidecarSessionIds.add(sessionId);
+
+    return {
+      sessionId, shell, meta, scrollback: "", mode: "sidecar",
+    };
   }
 
   const name = tmuxSessionName(sessionId);
@@ -423,7 +422,6 @@ export async function reconnectSession(
     // Non-fatal
   }
 
-  const meta = readSessionMeta(sessionId);
   const session = sessions.get(sessionId)!;
   session.shell =
     meta?.shell || process.env.SHELL || "/bin/zsh";
