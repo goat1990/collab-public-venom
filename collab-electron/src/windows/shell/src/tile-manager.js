@@ -498,6 +498,7 @@ export function createTileManager({
 			dom.container, tile, viewport,
 			repositionAllTiles,
 			getAllWebviews,
+			() => focusCanvasTile(tile.id),
 		);
 
 		tileLayer.appendChild(dom.container);

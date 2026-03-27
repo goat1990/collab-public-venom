@@ -266,7 +266,7 @@ export function attachMarquee(canvasEl, {
  * @param {() => Array<{webview: HTMLElement}>} getAllWebviews
  */
 export function attachResize(
-  container, tile, viewport, onUpdate, getAllWebviews,
+  container, tile, viewport, onUpdate, getAllWebviews, onFocus,
 ) {
   const edges = ["n", "s", "e", "w"];
   const corners = ["nw", "ne", "sw", "se"];
@@ -326,6 +326,7 @@ export function attachResize(
         }
         snapToGrid(tile);
         onUpdate();
+        if (onFocus) onFocus();
       }
 
       document.addEventListener("mousemove", onMove);
